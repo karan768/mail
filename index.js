@@ -26,6 +26,7 @@ app.get('/', (req, res) => {
 })
 
 app.post('/send', (req, res) => {
+	console.log(req.body,"req.bodyyyyy.dataaaaaa")
 	const mail = new Mail({
      name:req.body.name,
      company:req.body.company,
