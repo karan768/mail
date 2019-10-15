@@ -2,9 +2,9 @@ const express = require('express');
 const mongoose = require('mongoose');
 var url = "mongodb://localhost:27017/Mail";
 const bodyParser = require('body-parser');
-const exphbs = require('express-handlebars');
 const nodemailer = require('nodemailer');
 const path = require('path');
+var fs = require('fs');
 const Mail = require('./modal.js');
 
 const app = express();
@@ -21,37 +21,39 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json())
 
 app.get('/', (req, res) => {
-	res.sendfile('index.html');
+    res.sendfile('index.html');
 })
 
 app.post('/send', (req, res) => {
-    console.log(req.body,"request body")
-	const mail = new Mail({
+    const mail = new Mail({
      name:req.body.name,
      company:req.body.company,
      email:req.body.email,
      password:req.body.Password,
+     phonenumber:req.body.phone,
+     file:req.body.file,
      message:req.body.message
-	})
-	mail.save()
+    })
+    mail.save()
     .then(item => {
-    	console.log(item)
+        console.log(item)
     console.log("item saved to database");
      })
     .catch(err => {
      res.status(400).send("unable to save to database");
      })
-	const output = `
+    const output = `
     <h1>contact details</h1>
     <ul>
     <li>Name:${req.body.name}</li>
     <li>Company:${req.body.company}</li>
     <li>Email:${req.body.email}</li>
     <li>Phone:${req.body.phone}</li>
+    <li>file:${req.body.file}</li>
     </ul>
     <h3>message</h3>
     <p>${req.body.message}</p>
-	`;
+    `;
 
     let testAccount = nodemailer.createTestAccount();
 
@@ -64,20 +66,31 @@ app.post('/send', (req, res) => {
             pass: `${req.body.Password}`
         },
         tls:{
-        	rejectUnauthorized:false
-        }
+            rejectUnauthorized:false
+        },
+
     });
 
     let info =  transporter.sendMail({
         from: `${req.body.email}`, // sender address
-        to: 'karantomar928@gmail.com', // list of receivers
+        to: 'karan@linkites.com', // list of receivers
         subject: 'contct information', // Subject line
         text: 'Hello world?', // plain text body
+        attachments:[
+        //   {   
+        //     filename: `${req.body.file}`,
+        //     path: '/files/Projects 2019/mail/public/demo.txt' // stream this file
+        // },
+        {   
+            filename: `${req.body.file}`,
+            content: fs.createReadStream('/files/Projects 2019/mail/public/Oxford.jpg')
+        }
+        ],
         html: output // html body
     });
     res.sendfile('index.html')
 })
 
 app.listen(3005, () => {
-	console.log("server started at port 3005")
+    console.log("server started at port 3005")
 })
